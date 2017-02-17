@@ -7,7 +7,7 @@ import (
 )
 
 // DB must be set to a valid database in order to properly cache certificates
-// instead of downloading them for every request
+// instead of downloading them for every request.
 var DB *bolt.DB
 
 // TimeLimit is the maximum variance allowed in the timestamp from current time.

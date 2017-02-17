@@ -22,7 +22,7 @@ var (
 	errUnacceptableURL = errors.New("url provided is not acceptable")
 )
 
-// hasCheckedDB prevents us having to always call initDB
+// hasCheckedDB prevents us having to always call initDB.
 var hasCheckedDB = false
 
 // ValidateCertificate ensures that a request was from Amazon.

@@ -7,22 +7,22 @@ import (
 	"github.com/b00giZm/golexa"
 )
 
-// LaunchFunc is a function that is called when the Skill is opened
+// LaunchFunc is a function that is called when the Skill is opened.
 type LaunchFunc func(*golexa.Alexa, *golexa.Request, *golexa.Session) *golexa.Response
 
-// EndedFunc is a function that is called when the session is ended
+// EndedFunc is a function that is called when the session is ended.
 type EndedFunc func(*golexa.Alexa, *golexa.Request, *golexa.Session) *golexa.Response
 
-// IntentFunc is a function that is called when a specific intent is requested
+// IntentFunc is a function that is called when a specific intent is requested.
 type IntentFunc func(*golexa.Alexa, *golexa.Intent, *golexa.Request, *golexa.Session) *golexa.Response
 
-// LaunchHandler is called whenever the Skill is opened
+// LaunchHandler is called whenever the Skill is opened.
 var LaunchHandler LaunchFunc
 
-// EndedHandler is called when the session is ended
+// EndedHandler is called when the session is ended.
 var EndedHandler EndedFunc
 
-// UnhandledHandler is called whenever an intent does not have a handler
+// UnhandledHandler is called whenever an intent does not have a handler.
 var UnhandledHandler IntentFunc
 
 // IntentHandler is called whenever an intent with the specific name is
@@ -30,7 +30,7 @@ var UnhandledHandler IntentFunc
 // intent handler system.
 var IntentHandler IntentFunc
 
-// intentHandlers is a map of the handlers registered
+// intentHandlers is a map of the handlers registered.
 var intentHandlers map[string]IntentFunc
 
 var Debug = false
