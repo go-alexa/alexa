@@ -1,3 +1,4 @@
+// Package response allows constructing responses to Alexa requests.
 package response
 
 import (
