@@ -11,7 +11,7 @@ import (
 
 	"github.com/b00giZm/golexa"
 
-	"github.com/ixchi/alexa-colorful/validations"
+	"github.com/go-alexa/alexa/validations"
 )
 
 // Host is the host for the HTTP server to listen on. By default, it uses the
