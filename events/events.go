@@ -33,8 +33,7 @@ type EndedFunc func(*parser.Event) (*response.Response, error)
 
 // EventHandler is a handler for any Alexa events.
 type EventHandler interface {
-	New() *EventHandler
-	Add(string, IntentFunc) *EventHandler
+	Add(string, IntentFunc) EventHandler
 	Event(*parser.Event) (*response.Response, error)
 }
 
@@ -54,7 +53,7 @@ func New() *Handler {
 }
 
 // Add adds a new intent handler to the map for a specific intent name.
-func (e *Handler) Add(intent string, handler IntentFunc) *Handler {
+func (e *Handler) Add(intent string, handler IntentFunc) EventHandler {
 	e.IntentHandlers[intent] = handler
 
 	return e
