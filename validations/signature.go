@@ -17,22 +17,23 @@ var (
 )
 
 // ValidateSignature ensures that the request body was made with the
-// certificate provided in the header.
-func ValidateSignature(r *http.Request, cert *x509.Certificate) error {
+// certificate provided in the header. Returns the body as it has to be read
+// here and it prevents unneeded code to read it again.
+func ValidateSignature(r *http.Request, cert *x509.Certificate) ([]byte, error) {
 	// First, get the signature from the headers
 	sig, err := getSignature(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Then get the request body
 	body, err := getBody(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Return if the signature properly verified
-	return verifySignature(sig, body, cert)
+	return body, verifySignature(sig, body, cert)
 }
 
 // getSignature attempts to get the signature from the headers.

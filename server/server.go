@@ -9,8 +9,8 @@ import (
 
 	"github.com/gorilla/handlers"
 
-	"github.com/b00giZm/golexa"
-
+	"github.com/go-alexa/alexa/events"
+	"github.com/go-alexa/alexa/parser"
 	"github.com/go-alexa/alexa/validations"
 )
 
@@ -18,8 +18,8 @@ import (
 // environment variable of HTTP_HOST.
 var Host = os.Getenv("HTTP_HOST")
 
-// g is the Alexa instance.
-var g *golexa.Alexa
+// Events is the event handler.
+var Events events.EventHandler
 
 // writeBadRequest writes a http.StatusBadRequest error and message
 func writeBadRequest(w http.ResponseWriter) {
@@ -43,30 +43,34 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify signature is good
-	if err = validations.ValidateSignature(r, cert); err != nil {
+	body, err := validations.ValidateSignature(r, cert)
+	if err != nil {
 		writeBadRequest(w)
 		return
 	}
 
-	// Now that we know those things are good, try to decode the request payload
-	decoder := json.NewDecoder(r.Body)
-
 	var data json.RawMessage
 
-	err = decoder.Decode(&data)
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		writeBadRequest(w)
+		return
+	}
+
+	ev, err := parser.Parse(data)
 	if err != nil {
 		writeBadRequest(w)
 		return
 	}
 
 	// Make sure the request is good
-	if err = validations.ValidateRequest(data); err != nil {
+	if err = validations.ValidateRequest(ev); err != nil {
 		writeBadRequest(w)
 		return
 	}
 
 	// Try and process the request
-	resp, err := g.Process(data)
+	resp, err := Events.Event(ev)
 	if err != nil {
 		writeServerError(w)
 		return
@@ -85,8 +89,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Run starts the server. It mounts the handler on /alexa.
-func Run(golex *golexa.Alexa) error {
-	g = golex
+func Run(ev events.EventHandler) error {
+	Events = ev
 
 	http.HandleFunc("/alexa", Handler)
 

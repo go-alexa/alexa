@@ -2,103 +2,92 @@
 package events
 
 import (
-	"log"
+	"errors"
 
-	"github.com/b00giZm/golexa"
+	"github.com/go-alexa/alexa/parser"
+	"github.com/go-alexa/alexa/response"
 )
 
-// LaunchFunc is a function that is called when the Skill is opened.
-type LaunchFunc func(*golexa.Alexa, *golexa.Request, *golexa.Session) *golexa.Response
+const (
+	// RequestLaunch is when there has been a request for the app launch.
+	RequestLaunch = "LaunchRequest"
+	// RequestIntent is when there has been a request for an intent.
+	RequestIntent = "IntentRequest"
+	// RequestEnded is when the session has ended.
+	RequestEnded = "SessionEndedRequest"
+)
 
-// EndedFunc is a function that is called when the session is ended.
-type EndedFunc func(*golexa.Alexa, *golexa.Request, *golexa.Session) *golexa.Response
+var (
+	// ErrNoHandler means there was an intent called without a handler defined.
+	ErrNoHandler = errors.New("no handler was specificed for this intent")
+)
 
-// IntentFunc is a function that is called when a specific intent is requested.
-type IntentFunc func(*golexa.Alexa, *golexa.Intent, *golexa.Request, *golexa.Session) *golexa.Response
+// LaunchFunc is a func called when the app is launched.
+type LaunchFunc func(*parser.Event) (*response.Response, error)
 
-// LaunchHandler is called whenever the Skill is opened.
-var LaunchHandler LaunchFunc
+// IntentFunc is a func called when an intent has been called.
+type IntentFunc func(*parser.Event) (*response.Response, error)
 
-// EndedHandler is called when the session is ended.
-var EndedHandler EndedFunc
+// EndedFunc is a func called when the session has ended.
+type EndedFunc func(*parser.Event) (*response.Response, error)
 
-// UnhandledHandler is called whenever an intent does not have a handler.
-var UnhandledHandler IntentFunc
-
-// IntentHandler is called whenever an intent with the specific name is
-// requested. Note that this should remain nil if you want to use the normal
-// intent handler system.
-var IntentHandler IntentFunc
-
-// intentHandlers is a map of the handlers registered.
-var intentHandlers map[string]IntentFunc
-
-var Debug = false
-
-// init allocates the map.
-func init() {
-	intentHandlers = make(map[string]IntentFunc)
+// EventHandler is a handler for any Alexa events.
+type EventHandler interface {
+	New() *EventHandler
+	Add(string, IntentFunc) *EventHandler
+	Event(*parser.Event) (*response.Response, error)
 }
 
-// AddIntentHandler adds a handler for a specific intent.
-func AddIntentHandler(intent string, fn IntentFunc) {
-	if Debug {
-		log.Printf("Added handler for intent: %s\n", intent)
-	}
+// Handler is a default implementation of the EventHandler.
+type Handler struct {
+	LaunchHandler LaunchFunc
+	EndedHandler  EndedFunc
 
-	intentHandlers[intent] = fn
+	IntentHandlers map[string]IntentFunc
 }
 
-// handleIntent is the default handler for passing intents to the right place.
-func handleIntent(a *golexa.Alexa, i *golexa.Intent, r *golexa.Request, s *golexa.Session) *golexa.Response {
-	if fn, ok := intentHandlers[i.Name]; ok {
-		if Debug {
-			log.Printf("Running handler for intent: %s\n", i.Name)
-		}
-
-		resp := fn(a, i, r, s)
-
-		if Debug && resp == nil {
-			log.Printf("Handler for %s returned nil!\n", i.Name)
-		}
-
-		return resp
-	} else if UnhandledHandler != nil {
-		if Debug {
-			log.Println("Running handler for unhandled intent")
-		}
-
-		return UnhandledHandler(a, i, r, s)
+// New creates a new Handler and initializes the map.
+func New() *Handler {
+	return &Handler{
+		IntentHandlers: make(map[string]IntentFunc),
 	}
-
-	return nil
 }
 
-// Register attaches the event system to a standard golexa.Alexa instance.
-func Register(golex *golexa.Alexa) {
-	if LaunchHandler != nil {
-		if Debug {
-			log.Println("Running handler for launch")
+// Add adds a new intent handler to the map for a specific intent name.
+func (e *Handler) Add(intent string, handler IntentFunc) *Handler {
+	e.IntentHandlers[intent] = handler
+
+	return e
+}
+
+// Event processes all event handlers for an event. It then returns the response
+// or any errors that occurred while processing.
+func (e *Handler) Event(ev *parser.Event) (*response.Response, error) {
+	var resp *response.Response
+	var err error
+
+	switch ev.Request.Type {
+	case RequestLaunch:
+		if e.LaunchHandler != nil {
+			resp, err = e.LaunchHandler(ev)
+		} else {
+			err = ErrNoHandler
 		}
 
-		golex.OnLaunch(LaunchHandler)
-	}
-
-	if EndedHandler != nil {
-		if Debug {
-			log.Println("Running handler for session end")
+	case RequestEnded:
+		if e.EndedHandler != nil {
+			resp, err = e.EndedHandler(ev)
+		} else {
+			err = ErrNoHandler
 		}
 
-		golex.OnSessionEnded(EndedHandler)
-	}
-
-	if IntentHandler != nil {
-		if Debug {
-			log.Println("Running handler for intent")
+	case RequestIntent:
+		if fn, ok := e.IntentHandlers[ev.Request.Intent.Name]; ok {
+			resp, err = fn(ev)
+		} else {
+			err = ErrNoHandler
 		}
-
-		golex.OnIntent(IntentHandler)
-	} else {
-		golex.OnIntent(handleIntent)
 	}
+
+	return resp, err
 }
