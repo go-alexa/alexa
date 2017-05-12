@@ -40,7 +40,7 @@ type User struct {
 type Request struct {
 	ID        string `json:"requestId"`
 	Type      string `json:"type"`
-	Timestamp Time   `json:"timestamp"`
+	Timestamp *Time  `json:"timestamp"`
 	Locale    string `json:"locale,omitempty"`
 	Intent    Intent `json:"intent,omitempty"`
 	Reason    string `json:"reason,omitempty"`
@@ -55,13 +55,13 @@ func (t Time) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON allows for decoding the time in the correct format.
-func (t Time) UnmarshalJSON(b []byte) error {
+func (t *Time) UnmarshalJSON(b []byte) error {
 	time, err := time.Parse("\""+time.RFC3339Nano+"\"", string(b))
 	if err != nil {
 		return err
 	}
 
-	t = Time(time)
+	*t = Time(time)
 
 	return nil
 }
