@@ -8,6 +8,7 @@ import (
 type Event struct {
 	Version string  `json:"version"`
 	Session Session `json:"session"`
+	Context Context `json:"context,omitempty"`
 	Request Request `json:"request"`
 }
 
@@ -15,9 +16,9 @@ type Event struct {
 type Session struct {
 	ID          string            `json:"sessionId"`
 	IsNew       bool              `json:"new"`
-	Attributes  SessionAttributes `json:"attributes"`
-	Application Application       `json:"application"`
-	User        User              `json:"user"`
+	Attributes  SessionAttributes `json:"attributes,omitempty"`
+	Application Application       `json:"application,omitempty"`
+	User        User              `json:"user,omitempty"`
 }
 
 // SessionAttributes are arbitrary data set in a previous request. They only
@@ -61,6 +62,7 @@ func (t Time) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON allows for decoding the time in the correct format.
 func (t *Time) UnmarshalJSON(b []byte) error {
+
 	parsedTime, err := time.Parse("\""+time.RFC3339+"\"", string(b))
 	if err != nil {
 		return err
@@ -78,7 +80,7 @@ func (t Time) ToTime() time.Time {
 
 // Intent is information about the intent, including its name and slots.
 type Intent struct {
-	Name  				string 			`json:"name"`
+	Name  				string 		`json:"name"`
 	Slots 				map[string]Slot `json:"slots,omitempty"`
 	ConfirmationStatus  string			`json:"confirmationStatus,omitempty"`
 }
@@ -98,15 +100,15 @@ type SupportedInterfaces struct {
 }
 
 type Device struct {
-	ID string						`json:"deviceId,omitempty"`
+	ID string			`json:"deviceId,omitempty"`
 	Interfaces SupportedInterfaces  `json:"supportedInterfaces,omitempty"`
 }
 
 type System struct {
 	Application Application `json:"application,omitempty"`
 	User        User        `json:"user,omitempty"`
-	Device		Device      `json:"device,omitempty"`
-	ApiEndpoint string		`json:"apiEndpoint,omitempty"`
+	Device	    Device      `json:"device,omitempty"`
+	ApiEndpoint string      `json:"apiEndpoint,omitempty"`
 }
 
 type Context struct {
