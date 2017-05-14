@@ -30,6 +30,8 @@ type Application struct {
 	ID string `json:"applicationId"`
 }
 
+// Permissions hold the consent token which can retrieve additional information regarding
+// the current user
 type Permissions struct {
 	ConsentToken string `json:"consentToken,omitempty"`
 }
@@ -80,9 +82,9 @@ func (t Time) ToTime() time.Time {
 
 // Intent is information about the intent, including its name and slots.
 type Intent struct {
-	Name  				string 		`json:"name"`
-	Slots 				map[string]Slot `json:"slots,omitempty"`
-	ConfirmationStatus  string			`json:"confirmationStatus,omitempty"`
+	Name               string          `json:"name"`
+	Slots              map[string]Slot `json:"slots,omitempty"`
+	ConfirmationStatus string          `json:"confirmationStatus,omitempty"`
 }
 
 // Slot is the data for an intent.
@@ -91,28 +93,32 @@ type Slot struct {
 	Value string `json:"value"`
 }
 
+// AudioPlayer holds info about the audioplayer usage of the users device
 type AudioPlayer struct {
 	PlayerActivity string `json:"playerActivity,omitempty"`
 }
 
+// SupportedInterfaces Holds information regarding supported interfaces (future oriented - unneccessary atm)
 type SupportedInterfaces struct {
 	AudioPlayer AudioPlayer `json:"AudioPlayer,omitempty"`
 }
 
+// Device holds information regarding the users device
 type Device struct {
-	ID string			`json:"deviceId,omitempty"`
-	Interfaces SupportedInterfaces  `json:"supportedInterfaces,omitempty"`
+	ID         string              `json:"deviceId,omitempty"`
+	Interfaces SupportedInterfaces `json:"supportedInterfaces,omitempty"`
 }
 
+// System holds information regarding the users system (dot, alexa ... future stuff)
 type System struct {
 	Application Application `json:"application,omitempty"`
 	User        User        `json:"user,omitempty"`
-	Device	    Device      `json:"device,omitempty"`
-	ApiEndpoint string      `json:"apiEndpoint,omitempty"`
+	Device      Device      `json:"device,omitempty"`
+	APIEndpoint string      `json:"apiEndpoint,omitempty"`
 }
 
+// Context  holds more context to the users setup
 type Context struct {
 	AudioPlayer AudioPlayer `json:"AudioPlayer,omitempty"`
 	System      System      `json:"System,omitempty"`
 }
-
