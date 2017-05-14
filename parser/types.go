@@ -8,6 +8,7 @@ import (
 type Event struct {
 	Version string  `json:"version"`
 	Session Session `json:"session"`
+	Context Context `json:"context,omitempty"`
 	Request Request `json:"request"`
 }
 
@@ -15,9 +16,9 @@ type Event struct {
 type Session struct {
 	ID          string            `json:"sessionId"`
 	IsNew       bool              `json:"new"`
-	Attributes  SessionAttributes `json:"attributes"`
-	Application Application       `json:"application"`
-	User        User              `json:"user"`
+	Attributes  SessionAttributes `json:"attributes,omitempty"`
+	Application Application       `json:"application,omitempty"`
+	User        User              `json:"user,omitempty"`
 }
 
 // SessionAttributes are arbitrary data set in a previous request. They only
@@ -29,18 +30,26 @@ type Application struct {
 	ID string `json:"applicationId"`
 }
 
+// Permissions hold the consent token which can retrieve additional information regarding
+// the current user
+type Permissions struct {
+	ConsentToken string `json:"consentToken,omitempty"`
+}
+
 // User is information about the user, including access token if one has been
 // set through linking an account.
 type User struct {
-	ID          string `json:"userId"`
-	AccessToken string `json:"accessToken"`
+	ID          string      `json:"userId"`
+	AccessToken string      `json:"accessToken"`
+	Permissions Permissions `json:"permissions,omitempty"`
 }
 
 // Request is information about the request, including the intent and data.
 type Request struct {
 	ID        string `json:"requestId"`
 	Type      string `json:"type"`
-	Timestamp Time   `json:"timestamp"`
+	Locale    string `json:"locale,omitempty"`
+	Timestamp *Time  `json:"timestamp"`
 	Intent    Intent `json:"intent,omitempty"`
 	Reason    string `json:"reason,omitempty"`
 }
@@ -50,17 +59,18 @@ type Time time.Time
 
 // MarshalJSON allows for encoding the timestamp in the correct format.
 func (t Time) MarshalJSON() ([]byte, error) {
-	return []byte(time.Time(t).Format(time.RFC3339Nano)), nil
+	return []byte(time.Time(t).Format(time.RFC3339)), nil
 }
 
 // UnmarshalJSON allows for decoding the time in the correct format.
-func (t Time) UnmarshalJSON(b []byte) error {
-	time, err := time.Parse("\""+time.RFC3339Nano+"\"", string(b))
+func (t *Time) UnmarshalJSON(b []byte) error {
+
+	parsedTime, err := time.Parse("\""+time.RFC3339+"\"", string(b))
 	if err != nil {
 		return err
 	}
 
-	t = Time(time)
+	*t = Time(parsedTime)
 
 	return nil
 }
@@ -72,12 +82,43 @@ func (t Time) ToTime() time.Time {
 
 // Intent is information about the intent, including its name and slots.
 type Intent struct {
-	Name  string          `json:"name"`
-	Slots map[string]Slot `json:"slots"`
+	Name               string          `json:"name"`
+	Slots              map[string]Slot `json:"slots,omitempty"`
+	ConfirmationStatus string          `json:"confirmationStatus,omitempty"`
 }
 
 // Slot is the data for an intent.
 type Slot struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
+}
+
+// AudioPlayer holds info about the audioplayer usage of the users device
+type AudioPlayer struct {
+	PlayerActivity string `json:"playerActivity,omitempty"`
+}
+
+// SupportedInterfaces Holds information regarding supported interfaces (future oriented - unneccessary atm)
+type SupportedInterfaces struct {
+	AudioPlayer AudioPlayer `json:"AudioPlayer,omitempty"`
+}
+
+// Device holds information regarding the users device
+type Device struct {
+	ID         string              `json:"deviceId,omitempty"`
+	Interfaces SupportedInterfaces `json:"supportedInterfaces,omitempty"`
+}
+
+// System holds information regarding the users system (dot, alexa ... future stuff)
+type System struct {
+	Application Application `json:"application,omitempty"`
+	User        User        `json:"user,omitempty"`
+	Device      Device      `json:"device,omitempty"`
+	APIEndpoint string      `json:"apiEndpoint,omitempty"`
+}
+
+// Context  holds more context to the users setup
+type Context struct {
+	AudioPlayer AudioPlayer `json:"AudioPlayer,omitempty"`
+	System      System      `json:"System,omitempty"`
 }
