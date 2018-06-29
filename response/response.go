@@ -17,6 +17,8 @@ const (
 	CardStandard = "Standard"
 	// CardLinkAccount is a card for linking the user's account.
 	CardLinkAccount = "LinkAccount"
+	// DialogDelegateDirective is the dialog delegate directive type
+	DialogDelegateDirective = "Dialog.Delegate"
 )
 
 // Response is the base response struct.
@@ -31,6 +33,7 @@ type InnerResponse struct {
 	OutputSpeech     *OutputSpeech `json:"outputSpeech,omitempty"`
 	Card             *Card         `json:"card,omitempty"`
 	Reprompt         *Reprompt     `json:"reprompt,omitempty"`
+	Directives       []*Directive  `json:"directives,omitempty"`
 	ShouldEndSession bool          `json:"shouldEndSession"`
 }
 
@@ -60,6 +63,14 @@ type ImageURLs struct {
 // Reprompt is the speech for a reprompt message, if there is one.
 type Reprompt struct {
 	OutputSpeech OutputSpeech `json:"outputSpeech,omitempty"`
+}
+
+// Directive is a Dialog Directive
+// Ref: https://developer.amazon.com/docs/custom-skills/dialog-interface-reference.html
+// Currently only Dialog.Delegate is supported, but the others can be added easily
+type Directive struct {
+	Type   string         `json:"type"`
+	Intent *parser.Intent `json:"updatedIntent,omitempty"`
 }
 
 // New creates a new Response with some default values set.
@@ -149,6 +160,16 @@ func (r *Response) AddSSMLReprompt(speech string) *Response {
 		},
 	}
 
+	return r
+}
+
+// AddDialogDelegateDirective adds a dialog delegate directive with the specified updated intent (If provided)
+func (r *Response) AddDialogDelegateDirective(updatedIntent *parser.Intent) *Response {
+	directive := &Directive{
+		Type:   DialogDelegateDirective,
+		Intent: updatedIntent,
+	}
+	r.Response.Directives = append(r.Response.Directives, directive)
 	return r
 }
 
