@@ -89,8 +89,48 @@ type Intent struct {
 
 // Slot is the data for an intent.
 type Slot struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name        string      `json:"name"`
+	Value       string      `json:"value"`
+	Resolutions Resolutions `json:"resolutions,omitempty"`
+}
+
+// Resolutions is the data for a resolution contained within a slot that contains an array of resolution
+type Resolutions struct {
+	ResolutionsPerAuthority []Resolution `json:"resolutionsPerAuthority"`
+}
+
+// Resolution is the data used within the resolutions data array. It information about the resolved slot value
+type Resolution struct {
+	Authority string            `json:"authority"`
+	Status    ResolutionStatus  `json:"status"`
+	Values    []ResolutionValue `json:"values,omitempty"`
+}
+
+// ResolutionStatus is the resolution status used within resolution
+type ResolutionStatus struct {
+	Code string `json:"code"`
+}
+
+/*
+ResolutionValue is the resolution value used within the resolution
+ The values struct is really stupid. It is the following:
+"values": [
+	{
+		"value": {
+			"name": "Powerball",
+			"id": "b29a2c0b8e34ca0d91642d1eae81f5cf"
+		}
+	}
+]
+*/
+type ResolutionValue struct {
+	Value ResolutionValueValue `json:"value"`
+}
+
+// ResolutionValueValue is the resolution value used within the resolution
+type ResolutionValueValue struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
 }
 
 // AudioPlayer holds info about the audioplayer usage of the users device
