@@ -19,6 +19,12 @@ const (
 	CardLinkAccount = "LinkAccount"
 	// DialogDelegateDirective is the dialog delegate directive type
 	DialogDelegateDirective = "Dialog.Delegate"
+	// ElicitSlotDirective is the elicit slot directive type
+	ElicitSlotDirective = "Dialog.ElicitSlot"
+	// ConfirmSlotDirective is the confirm slot directive type
+	ConfirmSlotDirective = "Dialog.ConfirmSlot"
+	// ConfirmIntentDirective is the confirm intent directive type
+	ConfirmIntentDirective = "Dialog.ConfirmIntent"
 )
 
 // Response is the base response struct.
@@ -67,10 +73,11 @@ type Reprompt struct {
 
 // Directive is a Dialog Directive
 // Ref: https://developer.amazon.com/docs/custom-skills/dialog-interface-reference.html
-// Currently only Dialog.Delegate is supported, but the others can be added easily
 type Directive struct {
-	Type   string         `json:"type"`
-	Intent *parser.Intent `json:"updatedIntent,omitempty"`
+	Type          string         `json:"type"`
+	Intent        *parser.Intent `json:"updatedIntent,omitempty"`
+	SlotToElicit  string         `json:"slotToElicit,omitempty"`
+	SlotToConfirm string         `json:"slotToConfirm,omitempty"`
 }
 
 // New creates a new Response with some default values set.
@@ -165,12 +172,36 @@ func (r *Response) AddSSMLReprompt(speech string) *Response {
 
 // AddDialogDelegateDirective adds a dialog delegate directive with the specified updated intent (If provided)
 func (r *Response) AddDialogDelegateDirective(updatedIntent *parser.Intent) *Response {
-	directive := &Directive{
+	return r.addDirective(&Directive{
 		Type:   DialogDelegateDirective,
 		Intent: updatedIntent,
-	}
-	r.Response.Directives = append(r.Response.Directives, directive)
-	return r
+	})
+}
+
+// AddElicitSlotDirective adds a elicit slot directive with the slot to elicit and the updated intent (If provided)
+func (r *Response) AddElicitSlotDirective(slotToElicit string, updatedIntent *parser.Intent) *Response {
+	return r.addDirective(&Directive{
+		Type:         ElicitSlotDirective,
+		Intent:       updatedIntent,
+		SlotToElicit: slotToElicit,
+	})
+}
+
+// AddConfirmSlotDirective adds a confirm slot directive with the slot to confirm and the updated intent (If provided)
+func (r *Response) AddConfirmSlotDirective(updatedIntent *parser.Intent, slotToConfirm string) *Response {
+	return r.addDirective(&Directive{
+		Type:          ConfirmSlotDirective,
+		Intent:        updatedIntent,
+		SlotToConfirm: slotToConfirm,
+	})
+}
+
+// AddConfirmIntentDirective adds a confirm intent directive with the specified updated intent (If provided)
+func (r *Response) AddConfirmIntentDirective(updatedIntent *parser.Intent) *Response {
+	return r.addDirective(&Directive{
+		Type:   ConfirmIntentDirective,
+		Intent: updatedIntent,
+	})
 }
 
 // SetAttributes sets attributes for the Session data. Note that this must be
@@ -185,5 +216,10 @@ func (r *Response) SetAttributes(attrs parser.SessionAttributes) *Response {
 func (r *Response) KeepAlive() *Response {
 	r.Response.ShouldEndSession = false
 
+	return r
+}
+
+func (r *Response) addDirective(directive *Directive) *Response {
+	r.Response.Directives = append(r.Response.Directives, directive)
 	return r
 }
